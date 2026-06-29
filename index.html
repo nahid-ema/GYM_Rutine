@@ -91,7 +91,9 @@
             text-transform: uppercase;
             background: var(--accent-gradient);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
+            color: transparent;
             margin-bottom: 4px;
         }
 
@@ -527,13 +529,14 @@
 
         timerInterval = setInterval(() => {
             timeLeft--;
-            display.innerText = formatTime(timeLeft);
 
             if(timeLeft <= 0) {
                 clearInterval(timerInterval);
                 display.innerText = "DONE";
                 display.style.color = 'var(--success-color)';
                 if (window.navigator.vibrate) window.navigator.vibrate([300, 150, 300]);
+            } else {
+                display.innerText = formatTime(timeLeft);
             }
         }, 1000);
     }
