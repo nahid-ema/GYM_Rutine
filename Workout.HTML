@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALPHA ARMS // Workout Tracker</title>
+    <style>
+        :root {
+            /* Upgraded high-contrast premium theme */
+            --bg-gradient: linear-gradient(135deg, rgba(10, 15, 30, 0.92) 0%, rgba(17, 12, 40, 0.95) 100%);
+            --card-bg: rgba(15, 23, 42, 0.55); /* Thinned down for deeper blur visualization */
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent-color: #38bdf8;
+            --accent-gradient: linear-gradient(90deg, #38bdf8 0%, #818cf8 100%);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success-color: #4ade80;
+            --danger-color: #f87171;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            
+            /* Visualizer Background: Gym aesthetic image layered with complex lighting gradients */
+            background: var(--bg-gradient), 
+                        url('https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=1000&auto=format&fit=crop') no-repeat center center/cover;
+            background-attachment: fixed;
+        }
+
+        /* Ambient neon backlights to maximize the blur contrast */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 20%;
+            left: 15%;
+            width: 250px;
+            height: 250px;
+            background: #38bdf8;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.25;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: 15%;
+            right: 10%;
+            width: 300px;
+            height: 300px;
+            background: #6366f1;
+            border-radius: 50%;
+            filter: blur(160px);
+            opacity: 0.2;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* App Header */
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            text-transform: uppercase;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+
+        .stats-banner {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        .stats-banner span {
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+
+        /* Global Progress Bar */
+        .progress-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 999px;
+            height: 6px;
+            margin-bottom: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(5px);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-gradient);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Day Navigation Track */
+        .day-selector {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            scrollbar-width: none;
+        }
+
+        .day-selector::-webkit-scrollbar {
+            display: none;
+        }
+
+        .day-btn {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            border: 1px solid var(--card-border);
+            padding: 10px 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .day-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+        }
+
+        .day-btn.active {
+            background: var(--text-main);
+            color: #0f172a;
+            border-color: var(--text-main);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+        }
+
+        /* Glassmorphism Card Container */
+        .workout-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .day-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: -0.01em;
+        }
+
+        /* Exercise Module Block */
+        .exercise-row {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .exercise-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+
+        .exercise-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .exercise-tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-color);
+        }
+
+        .exercise-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+
+        /* Set Interaction Grid */
+        .sets-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 8px;
+        }
+
+        .set-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 10px 0;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+            color: var(--text-muted);
+        }
+
+        .set-box:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+        }
+
+        .set-box.done {
+            background: var(--accent-gradient);
+            color: #0f172a;
+            border-color: transparent;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(56, 189, 248, 0.3);
+        }
+
+        /* Rest Timer Module */
+        .timer-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .timer-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .timer-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .timer-display {
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-family: system-ui, monospace;
+            color: var(--text-main);
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .t-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .t-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .t-btn.stop {
+            background: rgba(248, 113, 113, 0.15);
+            border-color: rgba(248, 113, 113, 0.2);
+            color: var(--danger-color);
+        }
+
+        /* Main CTA Logging Button */
+        .log-btn {
+            width: 100%;
+            background: var(--accent-gradient);
+            color: #0f172a;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.3);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .log-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 30px rgba(56, 189, 248, 0.45);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Alpha Arms</h1>
+        <div class="stats-banner">CURRENT MATRIX: <span>62KG</span> / <span>5.7 FT</span> (HYPERTROPHY)</div>
+    </header>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="global-progress"></div>
+    </div>
+
+    <div class="day-selector">
+        <button onclick="switchDay(1)" id="btn-1" class="day-btn active">Day 1</button>
+        <button onclick="switchDay(2)" id="btn-2" class="day-btn">Day 2</button>
+        <button onclick="switchDay(3)" id="btn-3" class="day-btn">Day 3</button>
+        <button onclick="switchDay(4)" id="btn-4" class="day-btn">Day 4</button>
+        <button onclick="switchDay(5)" id="btn-5" class="day-btn">Day 5</button>
+        <button onclick="switchDay(6)" id="btn-6" class="day-btn">Day 6</button>
+        <button onclick="switchDay(7)" id="btn-7" class="day-btn">Day 7</button>
+    </div>
+
+    <div class="workout-card">
+        <div class="day-title" id="day-title">Loading Module...</div>
+        <div id="exercises-list"></div>
+    </div>
+
+    <div class="timer-container">
+        <div class="timer-left">
+            <span class="timer-label">Intra-Set Rest</span>
+            <span class="timer-display" id="timer-out">00:00</span>
+        </div>
+        <div class="timer-controls">
+            <button class="t-btn" onclick="startTimer(60)">60s</button>
+            <button class="t-btn" onclick="startTimer(90)">90s</button>
+            <button class="t-btn" onclick="startTimer(120)">120s</button>
+            <button class="t-btn stop" onclick="resetTimer()">Stop</button>
+        </div>
+    </div>
+
+    <button class="log-btn" onclick="logWorkout()">Complete Current Block</button>
+</div>
+
+<script>
+    // Exact same optimized data set
+    const routineData = {
+        1: {
+            title: "Day 1 // Push (Triceps Engine)",
+            exercises: [
+                { name: "Close-Grip Bench Press", sets: 3, meta: "3 sets × 8–10 reps. Prime movement execution. Heavy compound mass builder.", tag: "Triceps" },
+                { name: "Overhead Triceps Extension", sets: 3, meta: "3 sets × 10–12 reps. Cable or V-bar config. Focus on deep mechanical load.", tag: "Triceps" },
+                { name: "Incline Barbell/DB Press", sets: 2, meta: "2 sets × 8–12 reps. Isolate the superior chest clavicular fibers.", tag: "Chest" },
+                { name: "Parallel Dips", sets: 2, meta: "2 sets × 8–10 reps. Drive body through full range. Take final to failure.", tag: "Chest" },
+                { name: "Cable Low-to-High Fly", sets: 2, meta: "2 sets × 12–15 reps. Peak concentration at center chest convergence.", tag: "Chest" },
+                { name: "Decline Crunches", sets: 2, meta: "2 sets × 15 reps. Stabilize execution pace.", tag: "Abs" }
+            ]
+        },
+        2: {
+            title: "Day 2 // Pull (Biceps Mass)",
+            exercises: [
+                { name: "Preacher Curls", sets: 3, meta: "3 sets × 8–10 reps. Isolate upper arms completely. Fail on set 3.", tag: "Biceps" },
+                { name: "Hammer Curls", sets: 3, meta: "3 sets × 10–12 reps. Develop the deep brachialis to expand width profile.", tag: "Biceps" },
+                { name: "Pull-Ups / Lat Pulldowns", sets: 3, meta: "3 sets × 8–10 reps. Delivers wide posture foundation.", tag: "Back" },
+                { name: "Chest-Supported Rows", sets: 2, meta: "2 sets × 8–10 reps. Thick upper back horizontal density mapping.", tag: "Back" },
+                { name: "Machine Rear Delt Fly", sets: 2, meta: "2 sets × 12–15 reps. Complete posterior joint balancing.", tag: "Delts" },
+                { name: "Farmer’s Walks", sets: 3, meta: "3 sets × 40-sec carries. Extreme forearm structural conditioning.", tag: "Forearms" }
+            ]
+        },
+        3: {
+            title: "Day 3 // Legs & Shoulder Width",
+            exercises: [
+                { name: "Barbell / Hack Squat", sets: 3, meta: "3 sets × 5–8 reps. Foundation compound power set.", tag: "Quads" },
+                { name: "Leg Press", sets: 2, meta: "2 sets × 10–12 reps. High tension target volume.", tag: "Quads" },
+                { name: "Lying Leg Curl", sets: 3, meta: "3 sets × 8–10 reps. Prioritize slow eccentric muscle lengthening.", tag: "Hamstrings" },
+                { name: "Dumbbell Lateral Raises", sets: 4, meta: "4 sets × 12–15 reps. High volume capping to create arm separation.", tag: "Delts" },
+                { name: "Standing Calf Raise", sets: 3, meta: "3 sets × 15–20 reps. Controlled contractions.", tag: "Calves" }
+            ]
+        },
+        4: {
+            title: "Day 4 // Absolute Neural Recovery",
+            exercises: [
+                { name: "Muscle Synthesis Block", sets: 0, meta: "Rest window open. High protein absorption priority. Sleep 8+ hours.", tag: "Rest" }
+            ]
+        },
+        5: {
+            title: "Day 5 // Upper (Hypertrophy Override)",
+            exercises: [
+                { name: "Incline DB Bicep Curl", sets: 3, meta: "3 sets × 10–12 reps. Complete bicep tissue stretch depth.", tag: "Biceps" },
+                { name: "Cable Triceps Pushdowns", sets: 3, meta: "3 sets × 10–12 reps. Absolute elbow locking execution speed.", tag: "Triceps" },
+                { name: "Drag / Standard DB Curls", sets: 2, meta: "2 sets × 10–12 reps. Lock inner elbows strict to torso wall.", tag: "Biceps" },
+                { name: "Wrist Curls / Reverse Curls", sets: 3, meta: "3 sets × 12–15 reps. Build massive forearm thickness.", tag: "Forearms" },
+                { name: "Seated Barbell Overhead Press", sets: 2, meta: "2 sets × 8–10 reps. Compound shoulder structural force.", tag: "Delts" },
+                { name: "Wide-Grip Lat Pulldown", sets: 2, meta: "2 sets × 10–12 reps. Lat dynamic width maintenance.", tag: "Back" }
+            ]
+        },
+        6: {
+            title: "Day 6 // Lower (Posterior Arc)",
+            exercises: [
+                { name: "Hip Thrusts / RDLs", sets: 3, meta: "3 sets × 8–10 reps. Posterior loading force curve focus.", tag: "Hamstrings" },
+                { name: "Hack Squat / Extensions", sets: 2, meta: "2 sets × 10–12 reps. Quad isolation refinement.", tag: "Quads" },
+                { name: "Seated Calf Raise", sets: 2, meta: "2 sets × 12–20 reps. Deep ankle stretch orientation.", tag: "Calves" },
+                { name: "Dragon Flags / Core Work", sets: 2, meta: "2 sets to mechanical breakdown limits.", tag: "Abs" }
+            ]
+        },
+        7: {
+            title: "Day 7 // Absolute Neural Recovery",
+            exercises: [
+                { name: "Muscle Synthesis Block", sets: 0, meta: "Rest window open. Consume caloric surplus. Prepare for next push cycle.", tag: "Rest" }
+            ]
+        }
+    };
+
+    let currentDay = 1;
+    let timerInterval = null;
+
+    function switchDay(dayNum) {
+        currentDay = dayNum;
+        document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-${dayNum}`).classList.add('active');
+
+        const target = routineData[dayNum];
+        document.getElementById('day-title').innerText = target.title;
+        
+        const listContainer = document.getElementById('exercises-list');
+        listContainer.innerHTML = '';
+
+        target.exercises.forEach((ex) => {
+            const row = document.createElement('div');
+            row.className = 'exercise-row';
+            
+            let setBoxesHTML = '';
+            for(let s = 1; s <= ex.sets; s++) {
+                setBoxesHTML += `<div class="set-box" onclick="toggleSet(this)">Set ${s}</div>`;
+            }
+
+            row.innerHTML = `
+                <div class="exercise-header">
+                    <div class="exercise-name">${ex.name}</div>
+                    <span class="exercise-tag">${ex.tag}</span>
+                </div>
+                <div class="exercise-meta">${ex.meta}</div>
+                <div class="sets-container">${setBoxesHTML}</div>
+            `;
+            listContainer.appendChild(row);
+        });
+        
+        updateProgress();
+    }
+
+    function toggleSet(element) {
+        element.classList.toggle('done');
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const totalSets = document.querySelectorAll('.set-box').length;
+        const finishedSets = document.querySelectorAll('.set-box.done').length;
+        const progressPct = totalSets === 0 ? 0 : (finishedSets / totalSets) * 100;
+        document.getElementById('global-progress').style.width = `${progressPct}%`;
+    }
+
+    function startTimer(seconds) {
+        clearInterval(timerInterval);
+        let timeLeft = seconds;
+        const display = document.getElementById('timer-out');
+        
+        display.style.color = 'var(--accent-color)';
+        const formatTime = (s) => {
+            let m = Math.floor(s / 60);
+            let sec = s % 60;
+            return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+        };
+
+        display.innerText = formatTime(timeLeft);
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            display.innerText = formatTime(timeLeft);
+
+            if(timeLeft <= 0) {
+                clearInterval(timerInterval);
+                display.innerText = "DONE";
+                display.style.color = 'var(--success-color)';
+                if (window.navigator.vibrate) window.navigator.vibrate([300, 150, 300]);
+            }
+        }, 1000);
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        document.getElementById('timer-out').innerText = '00:00';
+        document.getElementById('timer-out').style.color = 'var(--text-main)';
+    }
+
+    function logWorkout() {
+        alert("Session saved. Keep your nutrition high today to pack size onto your arms!");
+    }
+
+    switchDay(1);
+</script>
+</body>
+</html>
+
