@@ -105,27 +105,27 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-100">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans selection:bg-zinc-200">
+      <header className="bg-white/80 backdrop-blur-md border-b border-zinc-200 sticky top-0 z-20">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-sm">
+            <div className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center text-white shadow-sm">
               <Dumbbell className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900">Iron Track</h1>
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Gym Routine</p>
+              <h1 className="text-xl font-black tracking-tight text-zinc-900 uppercase">Iron Track</h1>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Gym Routine</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-700">
-              <Calendar className="w-4 h-4 opacity-70" />
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-zinc-100 px-3 py-1.5 rounded-full text-xs font-bold text-zinc-700">
+              <Calendar className="w-3.5 h-3.5 opacity-60" />
               <span>{new Date(currentDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
             </div>
             <button 
               onClick={resetToday}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-full transition-colors"
               title="Reset today's progress"
             >
               <RotateCcw className="w-4 h-4" />
@@ -134,9 +134,9 @@ export default function App() {
         </div>
         
         {/* Total Progress Bar */}
-        <div className="w-full h-1.5 bg-slate-100">
+        <div className="w-full h-1 bg-zinc-100">
           <div 
-            className="h-full bg-indigo-600 transition-all duration-500 ease-out"
+            className="h-full bg-zinc-900 transition-all duration-500 ease-out"
             style={{ width: `${calculateTotalProgress()}%` }}
           />
         </div>
@@ -144,7 +144,7 @@ export default function App() {
 
       <main className="max-w-3xl mx-auto px-4 py-8 pb-24">
         {/* Day Selector */}
-        <div className="flex gap-3 overflow-x-auto pb-6 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
+        <div className="flex gap-2 overflow-x-auto pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
           {workoutSchedule.map(day => (
             <button
               key={day.dayNumber}
@@ -154,13 +154,13 @@ export default function App() {
               }}
               className={`flex-shrink-0 px-5 py-3 rounded-2xl text-left transition-all ${
                 activeDayNumber === day.dayNumber
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 ring-2 ring-indigo-600 ring-offset-2 ring-offset-slate-50'
-                  : 'bg-white text-slate-500 border border-slate-200 hover:border-indigo-300'
+                  ? 'bg-zinc-900 text-white shadow-md ring-1 ring-zinc-900 ring-offset-2 ring-offset-zinc-50'
+                  : 'bg-white text-zinc-500 border border-zinc-200 hover:border-zinc-300'
               }`}
             >
               <span className="block text-sm font-bold mb-0.5">Day {day.dayNumber}</span>
-              <span className={`block text-xs font-medium ${
-                activeDayNumber === day.dayNumber ? 'text-indigo-100' : 'text-slate-400'
+              <span className={`block text-[11px] font-semibold uppercase tracking-wider ${
+                activeDayNumber === day.dayNumber ? 'text-zinc-300' : 'text-zinc-400'
               }`}>
                 {day.name}
               </span>
@@ -169,12 +169,12 @@ export default function App() {
         </div>
 
         {currentDayConfig.isRest ? (
-          <div className="bg-white rounded-3xl border border-slate-200 p-10 text-center shadow-sm">
-            <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-5">
-              <Coffee className="w-10 h-10" />
+          <div className="bg-white rounded-[24px] border border-zinc-200 p-12 text-center shadow-sm">
+            <div className="w-20 h-20 bg-zinc-50 border border-zinc-100 text-zinc-900 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Coffee className="w-8 h-8" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-3">Rest & Recover</h2>
-            <p className="text-slate-500 max-w-sm mx-auto leading-relaxed">
+            <h2 className="text-2xl font-black text-zinc-900 mb-3 tracking-tight">Rest & Recover</h2>
+            <p className="text-zinc-500 max-w-xs mx-auto text-sm leading-relaxed font-medium">
               Your muscles grow when you rest. Stay hydrated, eat well, and get ready to hit it hard again tomorrow!
             </p>
           </div>
@@ -188,34 +188,34 @@ export default function App() {
             return (
               <div 
                 key={group.id} 
-                className={`bg-white rounded-2xl border transition-all duration-200 ${
-                  isActive ? 'border-indigo-200 shadow-md ring-1 ring-indigo-50/50' : 'border-slate-200 shadow-sm hover:border-slate-300'
+                className={`bg-white rounded-[24px] border transition-all duration-300 ${
+                  isActive ? 'border-zinc-300 shadow-md ring-4 ring-zinc-50/50' : 'border-zinc-200 shadow-sm hover:border-zinc-300'
                 }`}
               >
                 <button
                   onClick={() => setActiveGroup(isActive ? null : group.id)}
                   className="w-full px-6 py-5 flex items-center justify-between outline-none"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-colors ${
+                  <div className="flex items-center gap-5">
+                    <div className={`w-12 h-12 rounded-[16px] flex items-center justify-center border-2 transition-colors duration-300 ${
                       isCompleted 
                         ? 'bg-emerald-50 border-emerald-500 text-emerald-600' 
                         : isActive 
-                          ? 'bg-indigo-50 border-indigo-600 text-indigo-600'
-                          : 'bg-slate-50 border-slate-200 text-slate-400'
+                          ? 'bg-zinc-900 border-zinc-900 text-white'
+                          : 'bg-zinc-50 border-zinc-200 text-zinc-400'
                     }`}>
-                      {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : <span className="font-bold">{groupProgress}%</span>}
+                      {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : <span className="font-bold text-sm">{groupProgress}%</span>}
                     </div>
                     <div className="text-left">
-                      <h2 className={`text-lg font-bold tracking-tight ${isCompleted ? 'text-slate-900' : 'text-slate-900'}`}>
+                      <h2 className={`text-xl font-black tracking-tight ${isCompleted ? 'text-zinc-900' : 'text-zinc-900'}`}>
                         {group.name}
                       </h2>
-                      <p className="text-sm text-slate-500 font-medium">
+                      <p className="text-xs text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
                         {group.exercises.length} exercises
                       </p>
                     </div>
                   </div>
-                  <div className={`text-slate-400 transition-transform duration-200 ${isActive ? 'rotate-180' : ''}`}>
+                  <div className={`text-zinc-400 transition-transform duration-300 ${isActive ? 'rotate-180 text-zinc-900' : ''}`}>
                     <ChevronDown className="w-5 h-5" />
                   </div>
                 </button>
@@ -226,10 +226,10 @@ export default function App() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.25, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
-                      <div className="px-6 pb-6 pt-2 space-y-6 border-t border-slate-100">
+                      <div className="px-6 pb-6 pt-3 space-y-8 border-t border-zinc-100">
                         {group.exercises.map((exercise, idx) => {
                           const exProg = getExerciseProgress(exercise.id);
                           const completedSets = exProg.filter(Boolean).length;
@@ -238,41 +238,41 @@ export default function App() {
                           return (
                             <div key={exercise.id} className="relative">
                               {idx !== group.exercises.length - 1 && (
-                                <div className="absolute left-4 top-14 bottom-[-24px] w-px bg-slate-100" />
+                                <div className="absolute left-4 top-14 bottom-[-32px] w-0.5 bg-zinc-100 rounded-full" />
                               )}
                               
-                              <div className="flex items-start gap-4">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-sm font-bold z-10 transition-colors ${
+                              <div className="flex items-start gap-5">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 text-xs font-bold z-10 transition-colors ${
                                   isExCompleted 
-                                    ? 'bg-emerald-500 text-white' 
-                                    : 'bg-slate-100 text-slate-500'
+                                    ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-200' 
+                                    : 'bg-zinc-100 text-zinc-400 border border-zinc-200'
                                 }`}>
-                                  {idx + 1}
+                                  {isExCompleted ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
                                 </div>
                                 
                                 <div className="flex-1">
-                                  <div className="flex justify-between items-start mb-3">
+                                  <div className="flex justify-between items-start mb-4">
                                     <div>
-                                      <h3 className={`font-semibold text-base ${isExCompleted ? 'text-slate-900 line-through decoration-slate-300' : 'text-slate-900'}`}>
+                                      <h3 className={`font-bold text-base tracking-tight ${isExCompleted ? 'text-zinc-400 line-through decoration-zinc-300' : 'text-zinc-900'}`}>
                                         {exercise.name}
                                       </h3>
-                                      <p className="text-sm text-slate-500 mt-0.5">
+                                      <p className="text-xs font-semibold text-zinc-500 mt-1 uppercase tracking-wider">
                                         {exercise.maxSets} sets <span className="mx-1.5 opacity-50">•</span> {exercise.repsText}
                                       </p>
                                     </div>
                                   </div>
 
-                                  <div className="flex flex-wrap gap-2">
+                                  <div className="flex flex-wrap gap-2.5">
                                     {Array.from({ length: exercise.maxSets }).map((_, setIdx) => {
                                       const isChecked = !!exProg[setIdx];
                                       return (
                                         <button
                                           key={setIdx}
                                           onClick={() => toggleSet(exercise.id, setIdx)}
-                                          className={`relative h-10 flex-1 min-w-[3rem] max-w-[4rem] flex items-center justify-center rounded-lg border-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 ${
+                                          className={`relative h-11 flex-1 min-w-[3.5rem] max-w-[4.5rem] flex items-center justify-center rounded-[14px] border-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 ${
                                             isChecked
-                                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
-                                              : 'bg-white border-slate-200 text-slate-400 hover:border-indigo-300 hover:text-indigo-400'
+                                              ? 'bg-zinc-900 border-zinc-900 text-white shadow-md'
+                                              : 'bg-white border-zinc-200 text-zinc-400 hover:border-zinc-300 hover:text-zinc-600'
                                           }`}
                                           aria-label={`Toggle set ${setIdx + 1} for ${exercise.name}`}
                                         >
@@ -285,7 +285,7 @@ export default function App() {
                                               <CheckCircle2 className="w-5 h-5" />
                                             </motion.div>
                                           ) : (
-                                            <span className="text-sm font-semibold">{setIdx + 1}</span>
+                                            <span className="text-sm font-bold">{setIdx + 1}</span>
                                           )}
                                         </button>
                                       );
