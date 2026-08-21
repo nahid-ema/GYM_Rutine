@@ -1,0 +1,8 @@
+{
+  "name": "Fitness Tracker",
+  "description": "A fitness tracker for a specific gym routine including Chest, Triceps, Back, Biceps, Legs, and Shoulders.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
