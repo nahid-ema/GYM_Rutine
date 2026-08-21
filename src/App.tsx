@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { routineData, workoutSchedule } from './data';
-import { ChevronDown, ChevronUp, CheckCircle2, Circle, Dumbbell, Calendar, RotateCcw, Coffee } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { CheckCircle2, Dumbbell, Coffee, Download, Sun, Moon } from 'lucide-react';
+import { motion } from 'motion/react';
 
 export default function App() {
-  const [activeGroup, setActiveGroup] = useState<string | null>(null);
-  
   const [activeDayNumber, setActiveDayNumber] = useState<number>(() => {
     const saved = localStorage.getItem('fitness-active-day');
     return saved ? parseInt(saved, 10) : 1;
@@ -14,6 +12,36 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('fitness-active-day', activeDayNumber.toString());
   }, [activeDayNumber]);
+
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('fitness-dark-mode');
+    if (saved) return JSON.parse(saved);
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('fitness-dark-mode', JSON.stringify(darkMode));
+  }, [darkMode]);
+
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
   
   // Format today's date as YYYY-MM-DD
   const getTodayStr = () => new Date().toISOString().split('T')[0];
@@ -57,16 +85,6 @@ export default function App() {
     });
   };
 
-  const resetToday = () => {
-    if (window.confirm('Are you sure you want to reset all progress for today?')) {
-      setProgress(prev => {
-        const newProgress = { ...prev };
-        delete newProgress[currentDate];
-        return newProgress;
-      });
-    }
-  };
-
   const getExerciseProgress = (exerciseId: string) => {
     return (progress[currentDate] && progress[currentDate][exerciseId]) || [];
   };
@@ -105,207 +123,182 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans selection:bg-zinc-200">
-      <header className="bg-white/80 backdrop-blur-md border-b border-zinc-200 sticky top-0 z-20">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-zinc-900 rounded-xl flex items-center justify-center text-white shadow-sm">
-              <Dumbbell className="w-5 h-5" />
+    <div className={`min-h-screen bg-zinc-100 dark:bg-black flex justify-center text-zinc-900 font-sans selection:bg-zinc-200 ${darkMode ? 'dark' : ''}`}>
+      <div className="w-full max-w-[400px] bg-zinc-50 dark:bg-zinc-950 min-h-screen relative shadow-2xl flex flex-col sm:border-x border-zinc-200 dark:border-zinc-800">
+        <header className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-20">
+          <div className="w-full mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 bg-zinc-900 dark:bg-zinc-100 rounded-[10px] flex items-center justify-center text-white dark:text-zinc-900 shadow-sm shrink-0">
+                <Dumbbell className="w-4 h-4" />
+              </div>
+              <div>
+                <h1 className="text-lg font-black tracking-tight text-zinc-900 dark:text-white uppercase">Iron Track</h1>
+                <p className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest leading-none mt-0.5">Gym Routine</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-black tracking-tight text-zinc-900 uppercase">Iron Track</h1>
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Gym Routine</p>
+            
+            <div className="flex items-center gap-1.5 shrink-0">
+              {deferredPrompt && (
+                <button
+                  onClick={handleInstall}
+                  className="p-1.5 text-emerald-800 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 rounded-full transition-colors flex items-center justify-center shrink-0"
+                  title="Install App"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+              )}
+              <button 
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-1.5 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+                title="Toggle Dark Mode"
+              >
+                {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-zinc-100 px-3 py-1.5 rounded-full text-xs font-bold text-zinc-700">
-              <Calendar className="w-3.5 h-3.5 opacity-60" />
-              <span>{new Date(currentDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-            </div>
-            <button 
-              onClick={resetToday}
-              className="p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-full transition-colors"
-              title="Reset today's progress"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
+          {/* Total Progress Bar */}
+          <div className="w-full h-1 bg-zinc-100 dark:bg-zinc-800">
+            <div 
+              className="h-full bg-zinc-900 dark:bg-zinc-100 transition-all duration-500 ease-out"
+              style={{ width: `${calculateTotalProgress()}%` }}
+            />
           </div>
-        </div>
-        
-        {/* Total Progress Bar */}
-        <div className="w-full h-1 bg-zinc-100">
-          <div 
-            className="h-full bg-zinc-900 transition-all duration-500 ease-out"
-            style={{ width: `${calculateTotalProgress()}%` }}
-          />
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8 pb-24">
-        {/* Day Selector */}
-        <div className="flex gap-2 overflow-x-auto pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar">
-          {workoutSchedule.map(day => (
-            <button
-              key={day.dayNumber}
-              onClick={() => {
-                setActiveDayNumber(day.dayNumber);
-                setActiveGroup(null);
-              }}
-              className={`flex-shrink-0 px-5 py-3 rounded-2xl text-left transition-all ${
-                activeDayNumber === day.dayNumber
-                  ? 'bg-zinc-900 text-white shadow-md ring-1 ring-zinc-900 ring-offset-2 ring-offset-zinc-50'
-                  : 'bg-white text-zinc-500 border border-zinc-200 hover:border-zinc-300'
-              }`}
-            >
-              <span className="block text-sm font-bold mb-0.5">Day {day.dayNumber}</span>
-              <span className={`block text-[11px] font-semibold uppercase tracking-wider ${
-                activeDayNumber === day.dayNumber ? 'text-zinc-300' : 'text-zinc-400'
-              }`}>
-                {day.name}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {currentDayConfig.isRest ? (
-          <div className="bg-white rounded-[24px] border border-zinc-200 p-12 text-center shadow-sm">
-            <div className="w-20 h-20 bg-zinc-50 border border-zinc-100 text-zinc-900 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Coffee className="w-8 h-8" />
+        <main className="flex-1 w-full px-4 py-6 pb-[90px] overflow-y-auto overflow-x-hidden hide-scrollbar">
+          {currentDayConfig.isRest ? (
+            <div className="bg-white dark:bg-zinc-900 rounded-[24px] border border-zinc-200 dark:border-zinc-800 p-12 text-center shadow-sm mt-10">
+              <div className="w-20 h-20 bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-full flex items-center justify-center mx-auto mb-6">
+                <Coffee className="w-8 h-8" />
+              </div>
+              <h2 className="text-2xl font-black text-zinc-900 dark:text-white mb-3 tracking-tight">Rest & Recover</h2>
+              <p className="text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto text-sm leading-relaxed font-medium">
+                Your muscles grow when you rest. Stay hydrated, eat well, and get ready to hit it hard again tomorrow!
+              </p>
             </div>
-            <h2 className="text-2xl font-black text-zinc-900 mb-3 tracking-tight">Rest & Recover</h2>
-            <p className="text-zinc-500 max-w-xs mx-auto text-sm leading-relaxed font-medium">
-              Your muscles grow when you rest. Stay hydrated, eat well, and get ready to hit it hard again tomorrow!
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {visibleGroups.map((group) => {
-            const isActive = activeGroup === group.id;
-            const groupProgress = calculateGroupProgress(group.id);
-            const isCompleted = groupProgress === 100;
-            
-            return (
-              <div 
-                key={group.id} 
-                className={`bg-white rounded-[24px] border transition-all duration-300 ${
-                  isActive ? 'border-zinc-300 shadow-md ring-4 ring-zinc-50/50' : 'border-zinc-200 shadow-sm hover:border-zinc-300'
-                }`}
-              >
-                <button
-                  onClick={() => setActiveGroup(isActive ? null : group.id)}
-                  className="w-full px-6 py-5 flex items-center justify-between outline-none"
-                >
-                  <div className="flex items-center gap-5">
-                    <div className={`w-12 h-12 rounded-[16px] flex items-center justify-center border-2 transition-colors duration-300 ${
-                      isCompleted 
-                        ? 'bg-emerald-50 border-emerald-500 text-emerald-600' 
-                        : isActive 
-                          ? 'bg-zinc-900 border-zinc-900 text-white'
-                          : 'bg-zinc-50 border-zinc-200 text-zinc-400'
-                    }`}>
-                      {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : <span className="font-bold text-sm">{groupProgress}%</span>}
+          ) : (
+            <div className="space-y-8">
+              {visibleGroups.map((group) => {
+                const groupProgress = calculateGroupProgress(group.id);
+                const isCompleted = groupProgress === 100;
+                
+                return (
+                  <div key={group.id} className="bg-white dark:bg-zinc-900 rounded-[24px] border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-zinc-100 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-800/20 flex items-center justify-between">
+                      <div>
+                        <h2 className="text-lg font-black tracking-tight text-zinc-900 dark:text-white">{group.name}</h2>
+                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider mt-0.5">
+                          {group.exercises.length} exercises
+                        </p>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        isCompleted ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                      }`}>
+                        {groupProgress}%
+                      </div>
                     </div>
-                    <div className="text-left">
-                      <h2 className={`text-xl font-black tracking-tight ${isCompleted ? 'text-zinc-900' : 'text-zinc-900'}`}>
-                        {group.name}
-                      </h2>
-                      <p className="text-xs text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
-                        {group.exercises.length} exercises
-                      </p>
-                    </div>
-                  </div>
-                  <div className={`text-zinc-400 transition-transform duration-300 ${isActive ? 'rotate-180 text-zinc-900' : ''}`}>
-                    <ChevronDown className="w-5 h-5" />
-                  </div>
-                </button>
-
-                <AnimatePresence>
-                  {isActive && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25, ease: "easeInOut" }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-6 pb-6 pt-3 space-y-8 border-t border-zinc-100">
-                        {group.exercises.map((exercise, idx) => {
-                          const exProg = getExerciseProgress(exercise.id);
-                          const completedSets = exProg.filter(Boolean).length;
-                          const isExCompleted = completedSets === exercise.maxSets;
-                          
-                          return (
-                            <div key={exercise.id} className="relative">
-                              {idx !== group.exercises.length - 1 && (
-                                <div className="absolute left-4 top-14 bottom-[-32px] w-0.5 bg-zinc-100 rounded-full" />
-                              )}
+                    
+                    <div className="px-5 py-6 space-y-7">
+                      {group.exercises.map((exercise, idx) => {
+                        const exProg = getExerciseProgress(exercise.id);
+                        const completedSets = exProg.filter(Boolean).length;
+                        const isExCompleted = completedSets === exercise.maxSets;
+                        
+                        return (
+                          <div key={exercise.id} className="relative">
+                            {idx !== group.exercises.length - 1 && (
+                              <div className="absolute left-3.5 top-12 bottom-[-28px] w-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-full" />
+                            )}
+                            
+                            <div className="flex items-start gap-4">
+                              <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-1 text-[11px] font-bold z-10 transition-colors ${
+                                isExCompleted 
+                                  ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-200/50' 
+                                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 border border-zinc-200 dark:border-zinc-700'
+                              }`}>
+                                {isExCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : idx + 1}
+                              </div>
                               
-                              <div className="flex items-start gap-5">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 text-xs font-bold z-10 transition-colors ${
-                                  isExCompleted 
-                                    ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-200' 
-                                    : 'bg-zinc-100 text-zinc-400 border border-zinc-200'
-                                }`}>
-                                  {isExCompleted ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
+                              <div className="flex-1">
+                                <div className="flex justify-between items-start mb-3">
+                                  <div>
+                                    <h3 className={`font-bold text-[15px] tracking-tight leading-tight ${isExCompleted ? 'text-zinc-400 dark:text-zinc-600 line-through decoration-zinc-300 dark:decoration-zinc-700' : 'text-zinc-900 dark:text-zinc-100'}`}>
+                                      {exercise.name}
+                                    </h3>
+                                    <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 mt-1 uppercase tracking-wider">
+                                      {exercise.maxSets} sets <span className="mx-1 opacity-50">•</span> {exercise.repsText}
+                                    </p>
+                                  </div>
                                 </div>
-                                
-                                <div className="flex-1">
-                                  <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                      <h3 className={`font-bold text-base tracking-tight ${isExCompleted ? 'text-zinc-400 line-through decoration-zinc-300' : 'text-zinc-900'}`}>
-                                        {exercise.name}
-                                      </h3>
-                                      <p className="text-xs font-semibold text-zinc-500 mt-1 uppercase tracking-wider">
-                                        {exercise.maxSets} sets <span className="mx-1.5 opacity-50">•</span> {exercise.repsText}
-                                      </p>
-                                    </div>
-                                  </div>
 
-                                  <div className="flex flex-wrap gap-2.5">
-                                    {Array.from({ length: exercise.maxSets }).map((_, setIdx) => {
-                                      const isChecked = !!exProg[setIdx];
-                                      return (
-                                        <button
-                                          key={setIdx}
-                                          onClick={() => toggleSet(exercise.id, setIdx)}
-                                          className={`relative h-11 flex-1 min-w-[3.5rem] max-w-[4.5rem] flex items-center justify-center rounded-[14px] border-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 ${
-                                            isChecked
-                                              ? 'bg-zinc-900 border-zinc-900 text-white shadow-md'
-                                              : 'bg-white border-zinc-200 text-zinc-400 hover:border-zinc-300 hover:text-zinc-600'
-                                          }`}
-                                          aria-label={`Toggle set ${setIdx + 1} for ${exercise.name}`}
-                                        >
-                                          {isChecked ? (
-                                            <motion.div
-                                              initial={{ scale: 0.5, opacity: 0 }}
-                                              animate={{ scale: 1, opacity: 1 }}
-                                              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                                            >
-                                              <CheckCircle2 className="w-5 h-5" />
-                                            </motion.div>
-                                          ) : (
-                                            <span className="text-sm font-bold">{setIdx + 1}</span>
-                                          )}
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {Array.from({ length: exercise.maxSets }).map((_, setIdx) => {
+                                    const isChecked = !!exProg[setIdx];
+                                    return (
+                                      <button
+                                        key={setIdx}
+                                        onClick={() => toggleSet(exercise.id, setIdx)}
+                                        className={`relative h-10 flex-1 min-w-[3rem] max-w-[4rem] flex items-center justify-center rounded-[12px] border-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-100 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950 ${
+                                          isChecked
+                                            ? 'bg-zinc-900 dark:bg-zinc-100 border-zinc-900 dark:border-zinc-100 text-white dark:text-zinc-900 shadow-md'
+                                            : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
+                                        }`}
+                                        aria-label={`Toggle set ${setIdx + 1} for ${exercise.name}`}
+                                      >
+                                        {isChecked ? (
+                                          <motion.div
+                                            initial={{ scale: 0.5, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                                          >
+                                            <CheckCircle2 className="w-5 h-5" />
+                                          </motion.div>
+                                        ) : (
+                                          <span className="text-sm font-bold">{setIdx + 1}</span>
+                                        )}
+                                      </button>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </main>
+        
+        {/* Bottom Navigation */}
+        <nav className="absolute bottom-0 left-0 right-0 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 z-30 pb-safe">
+          <div className="flex justify-around items-center px-2 py-2">
+            {workoutSchedule.map(day => {
+              const isActive = activeDayNumber === day.dayNumber;
+              return (
+                <button
+                  key={day.dayNumber}
+                  onClick={() => setActiveDayNumber(day.dayNumber)}
+                  className={`flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all ${
+                    isActive ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-md' : 'text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  <span className="text-xs font-bold mb-0.5">Day {day.dayNumber}</span>
+                  <span className={`text-[9px] font-semibold uppercase tracking-wider text-center line-clamp-1 ${
+                    isActive ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-400'
+                  }`}>
+                    {day.name}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-        )}
-      </main>
+        </nav>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,17 @@
+{
+  "name": "Iron Track",
+  "short_name": "Iron Track",
+  "description": "A fitness tracker for a specific gym routine.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#18181b",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
