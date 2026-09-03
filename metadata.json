@@ -1,6 +1,6 @@
 {
   "name": "Fitness Tracker",
-  "description": "A fitness tracker for a specific gym routine including Chest, Triceps, Back, Biceps, Legs, and Shoulders.",
+  "description": "A 7-day gym workout tracker featuring Push A, Pull, Legs, Shoulders & Abs, Push B, and dedicated rest days.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

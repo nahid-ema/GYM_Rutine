@@ -47,8 +47,8 @@ export default function App() {
   const getTodayStr = () => new Date().toISOString().split('T')[0];
   const [currentDate, setCurrentDate] = useState<string>(getTodayStr());
 
-  const currentDayConfig = workoutSchedule.find(d => d.dayNumber === activeDayNumber)!;
-  const visibleGroups = routineData.filter(g => currentDayConfig.muscleGroupIds.includes(g.id));
+  const currentDayConfig = workoutSchedule.find(d => d.dayNumber === activeDayNumber) || workoutSchedule[0];
+  const visibleGroups = currentDayConfig.groups;
 
   // State: date -> exerciseId -> array of boolean for sets
   const [progress, setProgress] = useState<Record<string, Record<string, boolean[]>>>(() => {
@@ -90,7 +90,7 @@ export default function App() {
   };
 
   const calculateGroupProgress = (groupId: string) => {
-    const group = routineData.find(g => g.id === groupId);
+    const group = visibleGroups.find(g => g.id === groupId);
     if (!group) return 0;
     
     let totalSets = 0;
@@ -166,19 +166,43 @@ export default function App() {
           </div>
         </header>
 
-        <main className="flex-1 w-full px-4 py-6 pb-[90px] overflow-y-auto overflow-x-hidden hide-scrollbar">
+        <main className="flex-1 w-full px-4 py-6 pb-[95px] overflow-y-auto overflow-x-hidden hide-scrollbar">
           {currentDayConfig.isRest ? (
-            <div className="bg-white dark:bg-zinc-900 rounded-[24px] border border-zinc-200 dark:border-zinc-800 p-12 text-center shadow-sm mt-10">
-              <div className="w-20 h-20 bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-full flex items-center justify-center mx-auto mb-6">
-                <Coffee className="w-8 h-8" />
+            <div className="bg-white dark:bg-zinc-900 rounded-[24px] border border-zinc-200 dark:border-zinc-800 p-8 text-center shadow-sm mt-6">
+              <div className="w-16 h-16 bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <Coffee className="w-7 h-7" />
               </div>
-              <h2 className="text-2xl font-black text-zinc-900 dark:text-white mb-3 tracking-tight">Rest & Recover</h2>
-              <p className="text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto text-sm leading-relaxed font-medium">
-                Your muscles grow when you rest. Stay hydrated, eat well, and get ready to hit it hard again tomorrow!
-              </p>
+              <div className="text-[11px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-1">
+                {currentDayConfig.fullDayName}
+              </div>
+              <h2 className="text-2xl font-black text-zinc-900 dark:text-white mb-3 tracking-tight">
+                {currentDayConfig.title}
+              </h2>
+              <div className="bg-zinc-50 dark:bg-zinc-800/60 rounded-2xl p-4 border border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed font-medium">
+                {currentDayConfig.restDescription}
+              </div>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-6">
+              {/* Day Header */}
+              <div className="flex items-center justify-between pb-1">
+                <div>
+                  <div className="text-[10px] font-extrabold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                    {currentDayConfig.fullDayName}
+                  </div>
+                  <h2 className="text-xl font-black tracking-tight text-zinc-900 dark:text-white">
+                    {currentDayConfig.title}
+                  </h2>
+                </div>
+                <div className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                  calculateTotalProgress() === 100
+                    ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                }`}>
+                  {calculateTotalProgress()}%
+                </div>
+              </div>
+
               {visibleGroups.map((group) => {
                 const groupProgress = calculateGroupProgress(group.id);
                 const isCompleted = groupProgress === 100;
@@ -275,23 +299,26 @@ export default function App() {
         </main>
         
         {/* Bottom Navigation */}
-        <nav className="absolute bottom-0 left-0 right-0 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 z-30 pb-safe">
-          <div className="flex justify-around items-center px-2 py-2">
+        <nav className="absolute bottom-0 left-0 right-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 z-30 pb-safe">
+          <div className="grid grid-cols-7 gap-1 px-1.5 py-2">
             {workoutSchedule.map(day => {
               const isActive = activeDayNumber === day.dayNumber;
               return (
                 <button
                   key={day.dayNumber}
                   onClick={() => setActiveDayNumber(day.dayNumber)}
-                  className={`flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all ${
-                    isActive ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-md' : 'text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  className={`flex flex-col items-center justify-center py-2 px-0.5 rounded-xl transition-all ${
+                    isActive
+                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-sm'
+                      : 'text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                   }`}
+                  aria-label={`Select ${day.fullDayName}`}
                 >
-                  <span className="text-xs font-bold mb-0.5">Day {day.dayNumber}</span>
-                  <span className={`text-[9px] font-semibold uppercase tracking-wider text-center line-clamp-1 ${
-                    isActive ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-400'
+                  <span className="text-[11px] font-black leading-none mb-1">{day.dayOfWeek}</span>
+                  <span className={`text-[8px] font-semibold tracking-tight uppercase leading-none truncate max-w-full ${
+                    isActive ? 'text-zinc-300 dark:text-zinc-600 font-bold' : 'text-zinc-500 dark:text-zinc-400'
                   }`}>
-                    {day.name}
+                    {day.shortLabel}
                   </span>
                 </button>
               );
