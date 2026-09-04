@@ -48,7 +48,7 @@ export default function App() {
   const [currentDate, setCurrentDate] = useState<string>(getTodayStr());
 
   const currentDayConfig = workoutSchedule.find(d => d.dayNumber === activeDayNumber) || workoutSchedule[0];
-  const visibleGroups = currentDayConfig.groups;
+  const visibleGroups = currentDayConfig.groups || [];
 
   // State: date -> exerciseId -> array of boolean for sets
   const [progress, setProgress] = useState<Record<string, Record<string, boolean[]>>>(() => {
