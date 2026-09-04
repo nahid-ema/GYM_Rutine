@@ -123,9 +123,9 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen bg-zinc-100 dark:bg-black flex justify-center text-zinc-900 font-sans selection:bg-zinc-200 ${darkMode ? 'dark' : ''}`}>
-      <div className="w-full max-w-[400px] bg-zinc-50 dark:bg-zinc-950 min-h-screen relative shadow-2xl flex flex-col sm:border-x border-zinc-200 dark:border-zinc-800">
-        <header className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-20">
+    <div className={`h-[100dvh] bg-zinc-100 dark:bg-black flex justify-center text-zinc-900 font-sans selection:bg-zinc-200 ${darkMode ? 'dark' : ''}`}>
+      <div className="w-full max-w-[400px] bg-zinc-50 dark:bg-zinc-950 h-[100dvh] relative shadow-2xl flex flex-col sm:border-x border-zinc-200 dark:border-zinc-800 overflow-hidden">
+        <header className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-20 shrink-0">
           <div className="w-full mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 bg-zinc-900 dark:bg-zinc-100 rounded-[10px] flex items-center justify-center text-white dark:text-zinc-900 shadow-sm shrink-0">
