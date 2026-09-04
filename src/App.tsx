@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { routineData, workoutSchedule } from './data';
-import { CheckCircle2, Dumbbell, Coffee, Download, Sun, Moon } from 'lucide-react';
+import { CircleCheck, Dumbbell, Coffee, Download, Sun, Moon } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function App() {
@@ -241,7 +241,7 @@ export default function App() {
                                   ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-200/50' 
                                   : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 border border-zinc-200 dark:border-zinc-700'
                               }`}>
-                                {isExCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : idx + 1}
+                                {isExCompleted ? <CircleCheck className="w-3.5 h-3.5" /> : idx + 1}
                               </div>
                               
                               <div className="flex-1">
@@ -276,7 +276,7 @@ export default function App() {
                                             animate={{ scale: 1, opacity: 1 }}
                                             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                                           >
-                                            <CheckCircle2 className="w-5 h-5" />
+                                            <CircleCheck className="w-5 h-5" />
                                           </motion.div>
                                         ) : (
                                           <span className="text-sm font-bold">{setIdx + 1}</span>
