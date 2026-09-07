@@ -1,33 +1,796 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Iron Track</title>
-    <meta name="description" content="A fitness tracker for a specific gym routine." />
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#18181b" />
-    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icon.svg" />
-    <meta property="og:title" content="Iron Track" />
-    <meta property="og:description" content="A fitness tracker for a specific gym routine." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').then(reg => {
-            console.log('SW registered!', reg);
-          }).catch(err => {
-            console.log('SW registration failed: ', err);
-          });
-        });
-      }
-    </script>
-  </body>
-</html>
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>IronTrack — Workout Tracker PWA</title>
+  <!-- PWA meta tags for Android / Chrome installability -->
+  <meta name="theme-color" content="#09090b" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="application-name" content="IronTrack" />
+  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22IronTrack%20Workout%20Tracker%22%2C%22short_name%22%3A%22IronTrack%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%2309090b%22%2C%22theme_color%22%3A%22%2309090b%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fapi.iconify.design%2Flucide%3Adumbbell.svg%3Fcolor%3D%252310b981%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D" />
 
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              emerald: '#10b981',
+              cyan: '#06b6d4',
+              dark: '#09090b',
+              card: '#121215',
+              subtle: '#18181b',
+              border: '#27272a'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .font-mono-num {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Smooth custom scrollbars */
+    ::-webkit-scrollbar {
+      height: 4px;
+      width: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 9999px;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* Pulse ring animation */
+    @keyframes pulseRing {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .pulse-ring {
+      animation: pulseRing 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-[#09090b] text-zinc-100 min-h-screen flex flex-col items-center justify-start antialiased selection:bg-emerald-500/20 selection:text-emerald-400">
+
+  <!-- Main Container max-w-lg optimized for mobile-first Android app & clean desktop preview -->
+  <div class="w-full max-w-md min-h-screen flex flex-col bg-[#09090b] relative pb-28">
+
+    <!-- Top App Bar / Header -->
+    <header class="sticky top-0 z-40 bg-[#09090b]/90 backdrop-blur-md border-b border-zinc-800/80 px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shadow-sm shadow-emerald-950">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 5v14M18 5v14M2 9v6M22 9v6M6 12h12" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-base font-bold tracking-tight text-zinc-100 flex items-center gap-1.5 leading-tight">
+            IronTrack
+            <span class="text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700/60">PWA</span>
+          </h1>
+          <p class="text-[11px] text-zinc-400" id="currentDateDisplay">Routine &amp; Set Tracker</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <!-- Audio chime toggle -->
+        <button id="soundToggleBtn" onclick="toggleAudioChime()" title="Toggle Timer Beep" class="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-emerald-400 transition-colors">
+          <svg id="soundIconOn" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/>
+          </svg>
+          <svg id="soundIconOff" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+          </svg>
+        </button>
+
+        <!-- Install PWA Button (Visible in Chrome Android or desktop) -->
+        <button id="installPwaBtn" onclick="triggerPwaInstall()" class="hidden text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-all flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          <span>Install</span>
+        </button>
+
+        <!-- Reset Today's Progress Button -->
+        <button onclick="promptResetDay()" title="Reset Today's Sets" class="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-rose-400 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Horizontal Day Switcher (Saturday to Friday) -->
+    <nav class="px-3 pt-3 pb-2 border-b border-zinc-800/60 bg-[#0c0c0e]">
+      <div class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar scroll-smooth py-0.5" id="dayTabsContainer">
+        <!-- Generated dynamically via JS -->
+      </div>
+    </nav>
+
+    <!-- Workout Header & Summary Strip -->
+    <section class="px-4 pt-3.5 pb-2.5">
+      <div class="flex items-start justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 id="dayWorkoutTitle" class="text-lg font-bold text-white tracking-tight">Push A (Chest &amp; Triceps)</h2>
+            <span id="dayTypeBadge" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Workout</span>
+          </div>
+          <p id="dayWorkoutSubtitle" class="text-xs text-zinc-400 mt-0.5">Heavy Chest &amp; Triceps Routine</p>
+        </div>
+
+        <!-- Completion Count Pill -->
+        <div id="dayProgressBadge" class="text-right">
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono-num font-semibold text-zinc-300">
+            <span id="completedSetsRatio" class="text-emerald-400">0</span>
+            <span class="text-zinc-500">/</span>
+            <span id="totalSetsCount">12</span>
+            <span class="text-[10px] text-zinc-500 font-sans ml-0.5">sets</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Minimal Progress Bar -->
+      <div class="w-full h-1 bg-zinc-900 rounded-full mt-3 overflow-hidden border border-zinc-800/60">
+        <div id="dayProgressBar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-300 ease-out" style="width: 0%"></div>
+      </div>
+    </section>
+
+    <!-- Dynamic Main Content (Workout Cards OR Recovery Card) -->
+    <main class="flex-1 px-4 py-2 space-y-3" id="mainContentArea">
+      <!-- Exercise cards or Rest Day cards injected here -->
+    </main>
+
+    <!-- Floating Minimal Rest Timer (Active / Countdown Dock) -->
+    <aside id="restTimerDock" class="fixed bottom-3 left-0 right-0 max-w-md mx-auto px-4 z-50 pointer-events-none">
+      <div class="pointer-events-auto bg-[#121215]/95 backdrop-blur-xl border border-zinc-800 shadow-2xl shadow-black/80 rounded-2xl p-3 flex items-center justify-between transition-all duration-300 transform translate-y-0">
+        
+        <!-- Timer Display & Status -->
+        <div class="flex items-center gap-3">
+          <div class="relative w-11 h-11 flex items-center justify-center">
+            <svg class="w-11 h-11 -rotate-90">
+              <circle cx="22" cy="22" r="18" stroke="currentColor" stroke-width="3" fill="transparent" class="text-zinc-800" />
+              <circle id="timerCircleProgress" cx="22" cy="22" r="18" stroke="currentColor" stroke-width="3" fill="transparent" stroke-dasharray="113.1" stroke-dashoffset="0" stroke-linecap="round" class="text-emerald-400 transition-all duration-200" />
+            </svg>
+            <span id="timerDigits" class="absolute font-mono-num font-bold text-xs text-white">01:30</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-semibold text-zinc-300 tracking-wide uppercase">Rest Timer</span>
+              <span id="timerStatusDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            </div>
+            <!-- Quick Presets -->
+            <div class="flex items-center gap-1 mt-0.5">
+              <button onclick="setTimerPreset(60)" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 transition">60s</button>
+              <button onclick="setTimerPreset(90)" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 transition">90s</button>
+              <button onclick="setTimerPreset(120)" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 transition">120s</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timer Controls -->
+        <div class="flex items-center gap-1.5">
+          <!-- +30s button -->
+          <button onclick="adjustTimer(30)" title="Add 30 seconds" class="px-2 py-1.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/60 text-xs font-mono-num font-semibold text-zinc-300 hover:text-white active:scale-95 transition">
+            +30s
+          </button>
+          <!-- Play / Pause -->
+          <button id="timerPlayPauseBtn" onclick="toggleTimerRunning()" class="w-9 h-9 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black flex items-center justify-center shadow-lg shadow-emerald-500/20 active:scale-95 transition">
+            <svg id="timerPlayIcon" class="w-4 h-4 fill-current hidden" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <svg id="timerPauseIcon" class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+            </svg>
+          </button>
+          <!-- Reset / Dismiss button -->
+          <button onclick="resetTimer()" title="Reset Timer" class="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 active:scale-95 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- Reset Confirmation Modal -->
+    <div id="resetModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+      <div class="bg-[#121215] border border-zinc-800 max-w-xs w-full rounded-2xl p-5 text-center shadow-2xl space-y-4">
+        <div class="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 mx-auto flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white">Reset Today's Sets?</h3>
+          <p class="text-xs text-zinc-400 mt-1">This will clear all completed checkmarks for the active day. This action cannot be undone.</p>
+        </div>
+        <div class="flex gap-2 pt-1">
+          <button onclick="closeResetModal()" class="flex-1 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium text-xs transition">Cancel</button>
+          <button onclick="confirmResetDay()" class="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs shadow-lg shadow-rose-600/30 transition">Reset</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- APPLICATION LOGIC (Clean Vanilla JS + Web Audio + LocalStorage) -->
+  <script>
+    // ----------------------------------------------------
+    // Routine Data Specifications (Option 1 Swapped Schedule)
+    // ----------------------------------------------------
+    const ROUTINE_DATA = [
+      {
+        id: 'saturday',
+        name: 'Saturday',
+        shortName: 'SAT',
+        type: 'Push A',
+        focus: 'Chest & Triceps',
+        isRest: false,
+        exercises: [
+          { name: 'Incline Dumbbell Press', sets: 3, reps: '8–10' },
+          { name: 'Flat Machine Chest Press', sets: 3, reps: '8–10' },
+          { name: 'Pec Deck Fly', sets: 3, reps: '10–12' },
+          { name: 'Overhead Cable or Dumbbell Extension', sets: 3, reps: '10–12' }
+        ]
+      },
+      {
+        id: 'sunday',
+        name: 'Sunday',
+        shortName: 'SUN',
+        type: 'Pull',
+        focus: 'Back & Biceps',
+        isRest: false,
+        exercises: [
+          { name: 'Lat Pulldown (or Pull-ups)', sets: 3, reps: '8–10' },
+          { name: 'Seated Cable Row', sets: 3, reps: '8–10' },
+          { name: 'Incline Dumbbell Curl', sets: 3, reps: '8–10' },
+          { name: 'Hammer Curl', sets: 3, reps: '10–12' }
+        ]
+      },
+      {
+        id: 'monday',
+        name: 'Monday',
+        shortName: 'MON',
+        type: 'Rest',
+        focus: 'Full Recovery',
+        isRest: true,
+        restTips: [
+          { title: 'High Protein Intake', desc: 'Target 1.6–2.2g per kg bodyweight for optimal muscle protein synthesis.' },
+          { title: '3 Liters Hydration', desc: 'Replenish electrolytes and keep muscles hydrated for recovery.' },
+          { title: '8 Hours Sleep', desc: 'Crucial growth hormone release happens during deep REM cycles.' }
+        ]
+      },
+      {
+        id: 'tuesday',
+        name: 'Tuesday',
+        shortName: 'TUE',
+        type: 'Shoulders & Abs',
+        focus: 'Shoulders & Core',
+        isRest: false,
+        exercises: [
+          { name: 'Dumbbell Shoulder Press', sets: 3, reps: '8–10' },
+          { name: 'Lateral Raise (Cable or Dumbbell)', sets: 4, reps: '12–15' },
+          { name: 'Face Pulls', sets: 3, reps: '12–15' },
+          { name: 'Hanging Knee or Leg Raise', sets: 3, reps: '12–15' }
+        ]
+      },
+      {
+        id: 'wednesday',
+        name: 'Wednesday',
+        shortName: 'WED',
+        type: 'Legs',
+        focus: 'Quads, Hamstrings & Calves',
+        isRest: false,
+        exercises: [
+          { name: 'Hack Squat (or Leg Press)', sets: 3, reps: '8–10' },
+          { name: 'Lying or Seated Leg Curl', sets: 3, reps: '10–12' },
+          { name: 'Leg Extension', sets: 3, reps: '12–15' },
+          { name: 'Standing Calf Raise', sets: 3, reps: '12–15' }
+        ]
+      },
+      {
+        id: 'thursday',
+        name: 'Thursday',
+        shortName: 'THU',
+        type: 'Push B',
+        focus: 'Chest & Triceps',
+        isRest: false,
+        exercises: [
+          { name: 'Flat Dumbbell Press', sets: 3, reps: '8–10' },
+          { name: 'Incline Machine Press', sets: 3, reps: '8–10' },
+          { name: 'Low-to-High Cable Fly', sets: 3, reps: '10–12' },
+          { name: 'Triceps Rope Pushdown', sets: 3, reps: '10–12' }
+        ]
+      },
+      {
+        id: 'friday',
+        name: 'Friday',
+        shortName: 'FRI',
+        type: 'Rest',
+        focus: 'Surplus & Prep',
+        isRest: true,
+        restTips: [
+          { title: 'Caloric Surplus', desc: 'Fuel glycogen stores ahead of heavy Saturday Push session.' },
+          { title: 'Joint & Tendon Rest', desc: 'Give connective tissues downtime after a full 4-day training block.' },
+          { title: 'Log Review & Prep', desc: 'Review weekly progression and plan target weights for next week.' }
+        ]
+      }
+    ];
+
+    // LocalStorage Keys
+    const STORAGE_KEY_PROGRESS = 'irontrack_progress_v2';
+    const STORAGE_KEY_SOUND = 'irontrack_sound_enabled';
+
+    // State
+    let activeDayIndex = getInitialDayIndex();
+    let workoutProgress = loadStoredProgress();
+    let soundEnabled = localStorage.getItem(STORAGE_KEY_SOUND) !== 'false';
+
+    // Timer State
+    let timerTotalSeconds = 90;
+    let timerRemainingSeconds = 90;
+    let timerInterval = null;
+    let isTimerRunning = false;
+
+    // Determine initial day based on today's real day
+    function getInitialDayIndex() {
+      const dayMap = [1, 2, 3, 4, 5, 6, 0]; // JS Date 0=Sunday, 6=Saturday. We map to Sat(0)..Fri(6)
+      const now = new Date();
+      const currentDay = now.getDay();
+      // Saturday is 0, Sunday is 1, Monday is 2, etc.
+      if (currentDay === 6) return 0; // Saturday
+      if (currentDay === 0) return 1; // Sunday
+      return currentDay + 1; // Mon(1)->2, Tue(2)->3, Wed(3)->4, Thu(4)->5, Fri(5)->6
+    }
+
+    // Load / Save Progress
+    function loadStoredProgress() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY_PROGRESS);
+        return data ? JSON.parse(data) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveProgress() {
+      try {
+        localStorage.setItem(STORAGE_KEY_PROGRESS, JSON.stringify(workoutProgress));
+      } catch (e) {
+        console.error('Storage error', e);
+      }
+    }
+
+    // Audio Chime via Web Audio API (No external sound files needed!)
+    function playRestChime() {
+      if (!soundEnabled) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        
+        // Two-tone pleasant notification chime
+        const playTone = (freq, startTime, duration) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.001, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.2, startTime + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + duration);
+        };
+
+        const now = ctx.currentTime;
+        playTone(587.33, now, 0.25);        // D5
+        playTone(880.00, now + 0.15, 0.45); // A5
+      } catch (e) {
+        console.warn('Audio play restricted', e);
+      }
+    }
+
+    function toggleAudioChime() {
+      soundEnabled = !soundEnabled;
+      localStorage.setItem(STORAGE_KEY_SOUND, soundEnabled.toString());
+      updateSoundIcons();
+    }
+
+    function updateSoundIcons() {
+      const iconOn = document.getElementById('soundIconOn');
+      const iconOff = document.getElementById('soundIconOff');
+      if (soundEnabled) {
+        iconOn.classList.remove('hidden');
+        iconOff.classList.add('hidden');
+      } else {
+        iconOn.classList.add('hidden');
+        iconOff.classList.remove('hidden');
+      }
+    }
+
+    // ----------------------------------------------------
+    // UI Rendering
+    // ----------------------------------------------------
+    function renderDayTabs() {
+      const container = document.getElementById('dayTabsContainer');
+      container.innerHTML = '';
+
+      ROUTINE_DATA.forEach((day, index) => {
+        const isActive = index === activeDayIndex;
+        const isDayDone = checkIsDayCompleted(day);
+
+        const tabBtn = document.createElement('button');
+        tabBtn.className = `flex-1 min-w-[50px] py-2 px-1.5 rounded-xl text-center flex flex-col items-center justify-center transition-all duration-150 relative ${
+          isActive 
+            ? 'bg-zinc-800 text-white shadow-sm ring-1 ring-emerald-500/50' 
+            : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
+        }`;
+        tabBtn.onclick = () => selectDay(index);
+
+        tabBtn.innerHTML = `
+          <span class="text-[10px] font-bold uppercase tracking-wider">${day.shortName}</span>
+          <span class="text-[11px] font-semibold mt-0.5 ${isActive ? (day.isRest ? 'text-cyan-400' : 'text-emerald-400') : 'text-zinc-500'}">
+            ${day.type.split(' ')[0]}
+          </span>
+          ${isDayDone ? `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1"></span>` : '<span class="w-1.5 h-1.5 mt-1"></span>'}
+        `;
+
+        container.appendChild(tabBtn);
+      });
+    }
+
+    function checkIsDayCompleted(day) {
+      if (day.isRest) return false;
+      const dayStore = workoutProgress[day.id];
+      if (!dayStore) return false;
+      let totalSets = 0;
+      let completedSets = 0;
+      day.exercises.forEach((ex, exIdx) => {
+        for (let s = 0; s < ex.sets; s++) {
+          totalSets++;
+          if (dayStore[`${exIdx}_${s}`]) completedSets++;
+        }
+      });
+      return totalSets > 0 && completedSets === totalSets;
+    }
+
+    function selectDay(index) {
+      activeDayIndex = index;
+      renderDayTabs();
+      renderActiveDayContent();
+    }
+
+    function renderActiveDayContent() {
+      const day = ROUTINE_DATA[activeDayIndex];
+
+      // Update Header Text
+      document.getElementById('dayWorkoutTitle').textContent = `${day.name} (${day.type})`;
+      document.getElementById('dayWorkoutSubtitle').textContent = day.focus;
+      
+      const badge = document.getElementById('dayTypeBadge');
+      if (day.isRest) {
+        badge.textContent = 'Recovery';
+        badge.className = 'text-[11px] font-medium px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20';
+      } else {
+        badge.textContent = 'Workout';
+        badge.className = 'text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+      }
+
+      const mainArea = document.getElementById('mainContentArea');
+      mainArea.innerHTML = '';
+
+      if (day.isRest) {
+        renderRestDayView(day, mainArea);
+        updateProgressMetrics(0, 0);
+      } else {
+        renderWorkoutExercises(day, mainArea);
+      }
+    }
+
+    function renderRestDayView(day, container) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'space-y-3 pt-2';
+
+      wrapper.innerHTML = `
+        <div class="bg-[#121215] border border-zinc-800 rounded-2xl p-5 text-center">
+          <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-white">Scheduled Rest &amp; Recovery</h3>
+          <p class="text-xs text-zinc-400 mt-1 max-w-xs mx-auto">Muscles grow during recovery, not during the workout. Nourish, hydrate, and sleep deeply.</p>
+        </div>
+
+        <div class="space-y-2.5">
+          ${day.restTips.map(tip => `
+            <div class="bg-[#121215] border border-zinc-800/80 rounded-xl p-3.5 flex items-start gap-3">
+              <div class="w-2 h-2 rounded-full bg-cyan-400 mt-1.5 flex-shrink-0"></div>
+              <div>
+                <h4 class="text-xs font-semibold text-zinc-200">${tip.title}</h4>
+                <p class="text-xs text-zinc-400 mt-0.5 leading-relaxed">${tip.desc}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      container.appendChild(wrapper);
+    }
+
+    function renderWorkoutExercises(day, container) {
+      const dayStore = workoutProgress[day.id] || {};
+      let totalSetsCount = 0;
+      let completedSetsCount = 0;
+
+      day.exercises.forEach((exercise, exIndex) => {
+        const card = document.createElement('div');
+        card.className = 'bg-[#121215] border border-zinc-800 rounded-2xl p-4 transition-all duration-150 shadow-sm';
+
+        // Header of Card
+        let pillsHtml = '';
+        for (let s = 0; s < exercise.sets; s++) {
+          totalSetsCount++;
+          const isDone = !!dayStore[`${exIndex}_${s}`];
+          if (isDone) completedSetsCount++;
+
+          pillsHtml += `
+            <button 
+              onclick="toggleSetCheck('${day.id}', ${exIndex}, ${s})" 
+              class="flex-1 py-2.5 px-1 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 active:scale-95 ${
+                isDone 
+                  ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20 font-bold' 
+                  : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+              }">
+              ${isDone ? `
+                <svg class="w-3.5 h-3.5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ` : ''}
+              <span>Set ${s + 1}</span>
+            </button>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-2 mb-3">
+            <div>
+              <h3 class="text-sm font-semibold text-white leading-tight">${exercise.name}</h3>
+              <p class="text-xs text-emerald-400 font-mono-num font-medium mt-0.5">${exercise.sets} sets &times; ${exercise.reps} reps</p>
+            </div>
+            <!-- Quick Rest trigger for this exercise -->
+            <button onclick="triggerQuickRest(90)" title="Start 90s rest" class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-emerald-400 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Minimal Tap-to-Complete Set Pills -->
+          <div class="flex items-center gap-2">
+            ${pillsHtml}
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      updateProgressMetrics(completedSetsCount, totalSetsCount);
+    }
+
+    function toggleSetCheck(dayId, exIdx, setIdx) {
+      if (!workoutProgress[dayId]) {
+        workoutProgress[dayId] = {};
+      }
+      const key = `${exIdx}_${setIdx}`;
+      const newState = !workoutProgress[dayId][key];
+      workoutProgress[dayId][key] = newState;
+      saveProgress();
+
+      // If set just completed, start rest timer automatically
+      if (newState) {
+        startRestTimer(90);
+      }
+
+      renderDayTabs();
+      renderActiveDayContent();
+    }
+
+    function updateProgressMetrics(completed, total) {
+      document.getElementById('completedSetsRatio').textContent = completed;
+      document.getElementById('totalSetsCount').textContent = total;
+
+      const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+      document.getElementById('dayProgressBar').style.width = `${pct}%`;
+    }
+
+    // ----------------------------------------------------
+    // Rest Timer Logic
+    // ----------------------------------------------------
+    function formatTimeDigits(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateTimerDisplay() {
+      document.getElementById('timerDigits').textContent = formatTimeDigits(timerRemainingSeconds);
+
+      // Circle circumference is 2 * PI * 18 approx 113.1
+      const totalCircumference = 113.1;
+      const progressFraction = timerTotalSeconds > 0 ? (timerRemainingSeconds / timerTotalSeconds) : 0;
+      const strokeOffset = totalCircumference * (1 - progressFraction);
+      document.getElementById('timerCircleProgress').style.strokeDashoffset = strokeOffset;
+
+      const playIcon = document.getElementById('timerPlayIcon');
+      const pauseIcon = document.getElementById('timerPauseIcon');
+      const statusDot = document.getElementById('timerStatusDot');
+
+      if (isTimerRunning) {
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
+        statusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse';
+      } else {
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+        statusDot.className = 'w-1.5 h-1.5 rounded-full bg-zinc-500';
+      }
+    }
+
+    function startRestTimer(seconds) {
+      clearInterval(timerInterval);
+      timerTotalSeconds = seconds;
+      timerRemainingSeconds = seconds;
+      isTimerRunning = true;
+      updateTimerDisplay();
+
+      timerInterval = setInterval(() => {
+        if (timerRemainingSeconds > 0) {
+          timerRemainingSeconds--;
+          updateTimerDisplay();
+          if (timerRemainingSeconds === 0) {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            updateTimerDisplay();
+            playRestChime();
+          }
+        }
+      }, 1000);
+    }
+
+    function setTimerPreset(seconds) {
+      startRestTimer(seconds);
+    }
+
+    function adjustTimer(additionalSeconds) {
+      timerRemainingSeconds += additionalSeconds;
+      timerTotalSeconds = Math.max(timerTotalSeconds, timerRemainingSeconds);
+      updateTimerDisplay();
+    }
+
+    function toggleTimerRunning() {
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+      } else {
+        if (timerRemainingSeconds <= 0) {
+          timerRemainingSeconds = timerTotalSeconds || 90;
+        }
+        isTimerRunning = true;
+        timerInterval = setInterval(() => {
+          if (timerRemainingSeconds > 0) {
+            timerRemainingSeconds--;
+            updateTimerDisplay();
+            if (timerRemainingSeconds === 0) {
+              clearInterval(timerInterval);
+              isTimerRunning = false;
+              updateTimerDisplay();
+              playRestChime();
+            }
+          }
+        }, 1000);
+      }
+      updateTimerDisplay();
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      timerRemainingSeconds = timerTotalSeconds;
+      updateTimerDisplay();
+    }
+
+    function triggerQuickRest(sec) {
+      startRestTimer(sec);
+    }
+
+    // ----------------------------------------------------
+    // Day Reset Modal
+    // ----------------------------------------------------
+    function promptResetDay() {
+      document.getElementById('resetModal').classList.remove('hidden');
+    }
+
+    function closeResetModal() {
+      document.getElementById('resetModal').classList.add('hidden');
+    }
+
+    function confirmResetDay() {
+      const day = ROUTINE_DATA[activeDayIndex];
+      if (workoutProgress[day.id]) {
+        delete workoutProgress[day.id];
+        saveProgress();
+      }
+      closeResetModal();
+      renderDayTabs();
+      renderActiveDayContent();
+    }
+
+    // ----------------------------------------------------
+    // PWA Chrome Android Install Banner Support
+    // ----------------------------------------------------
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById('installPwaBtn');
+      if (installBtn) installBtn.classList.remove('hidden');
+    });
+
+    function triggerPwaInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            document.getElementById('installPwaBtn').classList.add('hidden');
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alert('To install on Android Chrome: Tap the top-right 3 dots menu and select "Install app" or "Add to Home screen".');
+      }
+    }
+
+    // Initial Setup
+    document.addEventListener('DOMContentLoaded', () => {
+      const now = new Date();
+      const options = { weekday: 'short', month: 'short', day: 'numeric' };
+      document.getElementById('currentDateDisplay').textContent = now.toLocaleDateString(undefined, options);
+      
+      updateSoundIcons();
+      renderDayTabs();
+      renderActiveDayContent();
+      updateTimerDisplay();
+    });
+  </script>
+</body>
+</html>
