@@ -782,9 +782,16 @@
 
     // Initial Setup
     document.addEventListener('DOMContentLoaded', () => {
-      const now = new Date();
-      const options = { weekday: 'short', month: 'short', day: 'numeric' };
-      document.getElementById('currentDateDisplay').textContent = now.toLocaleDateString(undefined, options);
+      function updateClock() {
+        const now = new Date();
+        const dateOpts = { weekday: 'short', month: 'short', day: 'numeric' };
+        const timeOpts = { hour: 'numeric', minute: '2-digit' };
+        const dateStr = now.toLocaleDateString(undefined, dateOpts);
+        const timeStr = now.toLocaleTimeString(undefined, timeOpts);
+        document.getElementById('currentDateDisplay').textContent = `${dateStr} • ${timeStr}`;
+      }
+      updateClock();
+      setInterval(updateClock, 1000);
       
       updateSoundIcons();
       renderDayTabs();
